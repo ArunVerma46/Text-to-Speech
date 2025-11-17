@@ -1,143 +1,123 @@
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog
 import pyttsx3
 from gtts import gTTS
+from PIL import Image, ImageTk
 import os
 
-
-# -----------------------------
-# THEME COLORS
-# -----------------------------
-dark_bg = "#111111"
-dark_fg = "#ffffff"
-light_bg = "#ffffff"
-light_fg = "#000000"
-
-current_theme = "dark"
-
-
-# -----------------------------
+# ------------------------------------------------
 # WINDOW SETUP
-# -----------------------------
+# ------------------------------------------------
 root = tk.Tk()
-root.title("AI TEXT ➜ VOICE CONVERTER")
-root.geometry("800x500")
-root.configure(bg=dark_bg)
+root.title("My_Dark_UI")
+root.geometry("1000x600")
+root.configure(bg="#000000")
+root.resizable(False, False)
 
 
-# -----------------------------
-# TOGGLE THEME FUNCTION
-# -----------------------------
-def toggle_theme():
-    global current_theme
+# ------------------------------------------------
+# LOAD PNG FRAMES
+# ------------------------------------------------
+outer_img = Image.open("C:\\Users\\Welcome\\Desktop\\New folder (3)\\solo_frame_outer.png")
+outer_img = outer_img.resize((1000, 600))
+outer_tk = ImageTk.PhotoImage(outer_img)
 
-    if current_theme == "dark":
-        current_theme = "light"
-        root.configure(bg=light_bg)
-        text_box.configure(bg=light_bg, fg=light_fg, insertbackground=light_fg)
-        status_label.configure(bg=light_bg, fg=light_fg)
-        theme_btn.configure(text="☀ Dark Mode")
-    else:
-        current_theme = "dark"
-        root.configure(bg=dark_bg)
-        text_box.configure(bg=dark_bg, fg=dark_fg, insertbackground=dark_fg)
-        status_label.configure(bg=dark_bg, fg=dark_fg)
-        theme_btn.configure(text="☾ Light Mode")
+inner_img = Image.open("C:\\Users\\Welcome\\Desktop\\New folder (3)\\solo_frame_inner_glass.png")
+inner_img = inner_img.resize((1000, 600))
+inner_tk = ImageTk.PhotoImage(inner_img)
 
 
-# -----------------------------
-# SPEAK TEXT (OFFLINE)
-# -----------------------------
+# ------------------------------------------------
+# CANVAS FOR BACKGROUND
+# ------------------------------------------------
+canvas = tk.Canvas(root, width=1000, height=600, highlightthickness=0, bg="#000")
+canvas.pack(fill="both", expand=True)
+
+canvas.create_image(0, 0, image=outer_tk, anchor="nw")
+canvas.create_image(0, 0, image=inner_tk, anchor="nw")
+
+
+# ------------------------------------------------
+# TEXT BOX (Glass Panel Center)
+# ------------------------------------------------
+text_box = tk.Text(root,
+                   font=("Consolas", 16),
+                   bg="#0b0014",
+                   fg="#d8c8ff",
+                   insertbackground="#b57dff",
+                   bd=0,
+                   highlightthickness=2,
+                   highlightbackground="#a55bff")
+text_box.place(x=180, y=130, width=640, height=260)
+
+
+# ------------------------------------------------
+# TEXT TO SPEECH FUNCTIONS
+# ------------------------------------------------
 def speak_offline():
     text = text_box.get("1.0", tk.END).strip()
     if text:
-        temp_engine = pyttsx3.init()   # recreate engine – prevents freeze
-        temp_engine.setProperty("rate", 175)
-        temp_engine.say(text)
-        temp_engine.runAndWait()
-        temp_engine.stop()
+        engine = pyttsx3.init()
+        engine.setProperty("rate", 175)
+        engine.say(text)
+        engine.runAndWait()
+        engine.stop()
 
-
-# -----------------------------
-# SAVE AS MP3 (AI VOICE USING gTTS)
-# -----------------------------
 def save_mp3():
     text = text_box.get("1.0", tk.END).strip()
     if text:
-        save_path = filedialog.asksaveasfilename(
-            defaultextension=".mp3",
-            filetypes=[("MP3 File", "*.mp3")],
-            title="Save MP3 File"
-        )
+        path = filedialog.asksaveasfilename(defaultextension=".mp3",
+                                            filetypes=[("MP3 File", "*.mp3")])
+        if path:
+            gTTS(text=text, lang="en").save(path)
+            status_label.config(text="✔ MP3 Saved!", fg="#b57dff")
 
-        if save_path:
-            tts = gTTS(text=text, lang='en')
-            tts.save(save_path)
-            status_label.config(text="✔ MP3 Saved Successfully!")
-
-
-# -----------------------------
-# PLAY MP3
-# -----------------------------
 def play_mp3():
-    file_path = filedialog.askopenfilename(
-        filetypes=[("MP3 File", "*.mp3")],
-        title="Select MP3 to Play"
-    )
-
-    if file_path:
-        os.system(f'start "" "{file_path}"')  # Windows default audio player
-        status_label.config(text="▶ Playing MP3...")
+    path = filedialog.askopenfilename(filetypes=[("MP3 File", "*.mp3")])
+    if path:
+        os.system(f'start "" "{path}"')
+        status_label.config(text="▶ Playing...", fg="#b57dff")
 
 
-# -----------------------------
-# TITLE LABEL
-# -----------------------------
-title = tk.Label(root, text="AI TEXT ➜ VOICE CONVERTER",
-                 font=("Arial", 20, "bold"),
-                 bg=dark_bg, fg=dark_fg)
-title.pack(pady=10)
+# ------------------------------------------------
+# NEON BUTTON FUNCTION
+# ------------------------------------------------
+def make_neon_button(text, cmd, x, y):
+    btn = tk.Button(root,
+                    text=text,
+                    font=("Bahnschrift SemiBold", 13),
+                    fg="#e8dafa",
+                    bg="#300066",
+                    activebackground="#5900b3",
+                    activeforeground="#fff",
+                    bd=0,
+                    highlightthickness=2,
+                    highlightbackground="#b57dff",
+                    command=cmd)
+
+    btn.place(x=x, y=y, width=200, height=45)
+
+    return btn
 
 
-# -----------------------------
-# TEXT BOX
-# -----------------------------
-text_box = tk.Text(root, height=12, font=("Arial", 14),
-                   bg=dark_bg, fg=dark_fg, insertbackground="white")
-text_box.pack(fill="both", padx=20, pady=10, expand=True)
+# ------------------------------------------------
+# BUTTONS (Under Panel)
+# ------------------------------------------------
+make_neon_button("Speak (Offline)", speak_offline, 140, 430)
+make_neon_button("Save as MP3 (AI Voice)", save_mp3, 400, 430)
+make_neon_button("Play MP3", play_mp3, 660, 430)
 
 
-# -----------------------------
-# BUTTON FRAME
-# -----------------------------
-btn_frame = tk.Frame(root, bg=root["bg"])
-btn_frame.pack(pady=10)
-
-speak_btn = tk.Button(btn_frame, text="Speak (Offline)", width=18,
-                      command=speak_offline)
-speak_btn.grid(row=0, column=0, padx=10)
-
-save_btn = tk.Button(btn_frame, text="Save as MP3 (AI Voice)", width=20,
-                     command=save_mp3)
-save_btn.grid(row=0, column=1, padx=10)
-
-play_btn = tk.Button(btn_frame, text="Play MP3", width=15,
-                     command=play_mp3)
-play_btn.grid(row=0, column=2, padx=10)
-
-
-# -----------------------------
-# THEME BUTTON
-# -----------------------------
-theme_btn = tk.Button(root, text="☾ Light Mode", width=15, command=toggle_theme)
-theme_btn.pack(pady=5)
-
-
-# -----------------------------
+# ------------------------------------------------
 # STATUS LABEL
-# -----------------------------
-status_label = tk.Label(root, text="", bg=dark_bg, fg=dark_fg, font=("Arial", 12))
-status_label.pack()
+# ------------------------------------------------
+status_label = tk.Label(root,
+                        text="",
+                        font=("Arial", 12),
+                        fg="#d8c8ff",
+                        bg="#000000")
+status_label.place(x=400, y=500)
 
 
 root.mainloop()
+
